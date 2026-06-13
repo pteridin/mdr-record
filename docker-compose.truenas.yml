@@ -1,6 +1,6 @@
 services:
   recorder:
-    image: ghcr.io/pteridin/mdr-record:latest
+    image: ghcr.io/pteridin/mdr-record:1.0.2
     environment:
       STREAM_URL: "https://mdr-live.ard-mcdn.de/mdr/sa/hls/de/master1080p5000.m3u8"
       START_TIME: "2026-06-14 09:55"
