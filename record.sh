@@ -5,22 +5,18 @@ DURATION_MIN="${1:-60}"
 TITLE="${2:-recording}"
 OUTPUT_DIR="${OUTPUT_DIR:-/recordings}"
 STREAM_URL="${STREAM_URL:?STREAM_URL must be set}"
-CHUNK_MIN="${CHUNK_MIN:-5}"
 RETRY_WAIT="${RETRY_WAIT:-10}"  # seconds to wait before reconnect attempt
 
 DURATION_SEC=$(( DURATION_MIN * 60 ))
-CHUNK_SEC=$(( CHUNK_MIN * 60 ))
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
 SAFE_TITLE="${TITLE// /_}"
 
-# Use a subdirectory per recording session so chunks stay together
-SESSION_DIR="${OUTPUT_DIR}/${SAFE_TITLE}_${TIMESTAMP}"
-mkdir -p "$SESSION_DIR"
+mkdir -p "$OUTPUT_DIR"
 
 END_EPOCH=$(( $(date +%s) + DURATION_SEC ))
-SEGMENT_INDEX=0
+RUN=0
 
-echo "Recording ${DURATION_MIN} min in ${CHUNK_MIN}-min chunks → ${SESSION_DIR}/"
+echo "Recording ${DURATION_MIN} min → ${OUTPUT_DIR}/"
 
 while true; do
   NOW=$(date +%s)
@@ -31,28 +27,20 @@ while true; do
     break
   fi
 
-  SEGMENT_PATTERN="${SESSION_DIR}/${SAFE_TITLE}_${TIMESTAMP}_%03d.ts"
+  # Each reconnect gets its own file; gaps in the stream become gaps between files.
+  OUTPUT_FILE="${OUTPUT_DIR}/${SAFE_TITLE}_${TIMESTAMP}_$(printf '%03d' "$RUN").ts"
+  RUN=$(( RUN + 1 ))
 
-  echo "Starting ffmpeg — ${REMAINING}s remaining, segment index starts at ${SEGMENT_INDEX}..."
+  echo "Starting ffmpeg — ${REMAINING}s remaining → ${OUTPUT_FILE}"
 
-  # -segment_start_number: continue numbering from where we left off after a reconnect
-  # MPEG-TS requires no finalization; partial final chunk is still playable.
+  # MPEG-TS: no finalization needed; file is valid up to any truncation point.
   ffmpeg -loglevel warning \
     -i "$STREAM_URL" \
     -t "$REMAINING" \
     -c copy \
-    -f segment \
-    -segment_time "$CHUNK_SEC" \
-    -segment_format mpegts \
-    -segment_start_number "$SEGMENT_INDEX" \
-    -reset_timestamps 1 \
-    -y "$SEGMENT_PATTERN" && break  # clean exit = recording finished normally
+    -y "$OUTPUT_FILE" && break  # clean exit = recording finished normally
 
-  EXIT_CODE=$?
-  echo "ffmpeg exited with code ${EXIT_CODE}."
-
-  # Count segments written so far to advance the index for the next run
-  SEGMENT_INDEX=$(find "$SESSION_DIR" -name "*.ts" | wc -l)
+  echo "ffmpeg exited with code $?."
 
   NOW=$(date +%s)
   REMAINING=$(( END_EPOCH - NOW ))
@@ -66,4 +54,4 @@ while true; do
   sleep "$RETRY_WAIT"
 done
 
-echo "Done: ${SESSION_DIR}/"
+echo "Done: ${OUTPUT_DIR}/"

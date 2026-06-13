@@ -18,6 +18,9 @@ services:
       # Timezone for scheduling (affects START_TIME interpretation)
       TZ: "${TZ:-Europe/Berlin}"
 
+      # Seconds to wait before reconnecting after a dropped stream (default: 10)
+      RETRY_WAIT: "${RETRY_WAIT:-10}"
+
     volumes:
       # Map a host directory to /recordings inside the container
       - "${RECORDINGS_DIR:-./recordings}:/recordings"

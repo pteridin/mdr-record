@@ -7,6 +7,7 @@ services:
       DURATION_MIN: "70"
       TITLE: "recording_2026-06-14"
       TZ: "Europe/Berlin"
+      RETRY_WAIT: "10"
     volumes:
       - "/path/to/recordings:/recordings"
     restart: "no"
