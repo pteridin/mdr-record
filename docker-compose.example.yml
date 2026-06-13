@@ -1,0 +1,12 @@
+services:
+  recorder:
+    build: .
+    environment:
+      STREAM_URL: "https://mdr-live.ard-mcdn.de/mdr/sa/hls/de/master1080p5000.m3u8"
+      START_TIME: "2026-06-14 09:55"
+      DURATION_MIN: "70"
+      TITLE: "recording_2026-06-14"
+      TZ: "Europe/Berlin"
+    volumes:
+      - "/path/to/recordings:/recordings"
+    restart: "no"

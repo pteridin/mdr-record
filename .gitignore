@@ -1,0 +1,4 @@
+.env
+recordings/
+*.mp4
+*.ts

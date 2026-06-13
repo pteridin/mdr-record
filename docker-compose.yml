@@ -1,0 +1,25 @@
+services:
+  recorder:
+    build: .
+    environment:
+      # Time to start recording. Format: "HH:MM" (today) or "YYYY-MM-DD HH:MM"
+      # Leave empty to start immediately.
+      START_TIME: "${START_TIME:-}"
+
+      # Duration of the recording in minutes
+      DURATION_MIN: "${DURATION_MIN:-60}"
+
+      # Base name for the output file (spaces replaced with underscores)
+      TITLE: "${TITLE:-recording}"
+
+      # Stream URL
+      STREAM_URL: "${STREAM_URL}"
+
+      # Timezone for scheduling (affects START_TIME interpretation)
+      TZ: "${TZ:-Europe/Berlin}"
+
+    volumes:
+      # Map a host directory to /recordings inside the container
+      - "${RECORDINGS_DIR:-./recordings}:/recordings"
+
+    restart: "no"
